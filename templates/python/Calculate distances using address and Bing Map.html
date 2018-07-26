@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+
+<head>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-122821934-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-122821934-1');
+    </script>
+    <meta charset="UTF-8">
+    <title>wangzongyan</title>
+    
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel='stylesheet' href='../../css/style.css'>
+    <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+</head>
+
+<body>
+    <div id = 'main'>
+        <div class = 'container'>
+           <div class="row"> 
+                <!-- nav bar -->
+                    <nav class="col-md-2 col-xs-2 d-none d-md-block bg-light sidebar">
+                        <div class="sidebar-sticky">
+                        <li class="nav-item">
+                            <a class="nav-link" href="../../index.html">About</a>
+                        </li>
+                            <br>
+                            <a class="nav-link" href="../project.html">Projects</a>
+                            <br>
+                            <a class="nav-link active" href="../blog.html">Blog</a>
+                            <br>
+                            <a class="nav-link" href="../contact.html">Contact</a>
+                            <br>
+                            <a class='nav-link' href="../index.html">Last level</a>
+                        </div>    
+                        </nav>
+                         
+                     <div class="row">       
+                    <!-- content -->
+                    <main role="main" class="col-md-9 ml-sm-auto col-lg-10 pt-3 px-4">
+                        <!-- fill in content -->
+                        <div class="container">
+
+                      
+
+                    <!-- Post Content Column -->
+                    
+
+                      <!-- Title -->
+                      <h1 class="mt-4">Calculate distances using address and Bing Map</h1>
+
+                      <!-- Author -->
+                      <p class="lead">
+                        by
+                        <a href="../../index.html">Zongyan Wang</a>
+                      </p>
+
+                      <hr>
+
+                      <!-- Date/Time -->
+                      <p>Posted on July 26, 2018</p>
+
+                      <hr>
+
+                      <!-- Preview Image -->
+                      <!-- <img class="img-fluid rounded" src="http://placehold.it/900x300" alt="">
+ -->
+                      <!-- <hr> -->
+
+                      <!-- Post Content -->
+                      <p class="lead"> Imagine you want to compare the following distance: <br>
+                        1. Times Square, New York to Disney Resorts, Orlando <br>
+                        2. You and the girl/boy you are chasing for. <br>
+                      The following article can help you to calculate the first distance by Python.
+                      </p>
+                  
+                      <p>
+                      What you need: <br>
+                          Python --3.7 <br>
+                          geocoder --1.38.1 <br>
+                          pandas  --0.23.3<br>
+                      </p>
+
+                      <p> How can I check my python packages version? <br>
+                        For example if you want to find your pandas version. Open a python interface and do.
+                      </p>
+                      <pre class='prettyprint'>
+>>> import pandas 
+>>> pandas.__version__ 
+'0.23.3'
+                      </pre>
+                      <br>
+                      <p>
+                        Now here is your data.
+                      </p>
+                      
+                      <pre class='prettyprint'>
+df = pd.DataFrame({'A_address': ['Times Square',], 
+                      'A_city': ['Manhattan', ], 
+                      'A_state': ['NY', ], 
+                      'B_address': ['Walt Disney World Resort', ], 
+                      'B_city': ['Orlando',], 
+                      'B_state':['FL']}, index = range(1))
+                        
+                      </pre>  
+                      
+
+                      <p> What we will do the next is: <br>
+                      1. Get the lat, lng information for A and B.
+                      2. Calculate the distance with the lat, lng.
+                     To get the lat, lng. First we need to concatenate the address into full address. Use:</p>
+
+                      <pre class='prettyprint'>
+df['A_full_address'] = ["%s, %s %s"%(addr, city, state) for addr, city, state in zip(df.A_address, df.A_city, df.A_state)] <br>
+df['B_full_address'] = ["%s, %s %s"%(addr, city, state) for addr, city, state in zip(df.B_address,  df.B_city,  df.B_state)]
+                        
+                      </pre>
+                      <br>
+
+                      Then, calculate the lattitude and longitude using geocoder. <br>
+                      To run the following code, you need to get your bing map key first. And be careful, don't waste your money on duplicates. Check your number of unique addresses first if you have multiple rows. 
+
+                      
+                      <pre class='prettyprint'>
+# if you have duplicates
+# df_a = df.loc[:, [x for x in df.columns if x[0] == 'A']]
+## de-duplicate
+# df_a = df_a.groupby('A_full_address').first().reset_index(drop=False)
+for i in df.index: 
+    g = geocoder.bing(df.loc[i, 'A_full_address'], key = bing_key) 
+    df.loc[i, 'A_lng'] = g.lng 
+    df.loc[i, 'A_lat'] = g.lat
+                        
+                      </pre> 
+                      <br>
+
+                      Or you may use pandas apply method.
+
+                      
+                      <pre class='prettyprint'>     
+def get_loc(obj): 
+    g = geocoder.bing(obj, key = bing_key) 
+    return g.lng, g.lat 
+df[['B_lng', 'B_lat']] = df.apply(lambda obj: pd.Series(
+      dict(zip(['B_lng', 'B_lat'],
+      get_loc(obj['B_full_address'])))), axis = 1)
+                          
+                      </pre>
+                      <br>
+
+                    <p> The haversine function is credit to https://stackoverflow.com/questions/4913349/haversine-formula-in-python-bearing-and-distance-between-two-gps-points. Here is the function:
+                    </p>
+
+                    <pre class='prettyprint'>  
+from math import radians, cos, sin, asin, sqrt   
+def haversine(lon1, lat1, lon2, lat2):
+    """
+    Calculate the great circle distance between two points 
+    on the earth (specified in decimal degrees)
+    """
+    # convert decimal degrees to radians 
+    lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
+    # haversine formula 
+    dlon = lon2 - lon1 
+    dlat = lat2 - lat1 
+    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+    c = 2 * asin(sqrt(a)) 
+    km = 6367 * c
+    mile = km * 0.621371
+    return "%.2f"%mile
+                          
+                      </pre>
+                      <br>
+
+                  <p> And you could finally calculate the distance using haversine function defined above. </p>
+
+                  <pre class='prettyprint'> 
+df['distance_in_miles'] = df.apply(lambda obj: haversine(*obj[['A_lng', 'A_lat', 'B_lng', 'B_lat']]), axis = 1)
+                  </pre>
+                    
+                  <p>
+                    Your final output will look something like this
+                  </p>
+                  <table  class="table-responsive table-bordered table-hover table-striped"">  <thead>    <tr style="text-align: right;">      <th scope="row"></th>      <th scope="col">A_address</th>      <th scope="col">A_city</th>      <th scope="col">A_state</th>      <th scope="col">B_address</th>      <th scope="col">B_city</th>      <th scope="col">B_state</th>      <th scope="col">A_full_address</th>      <th scope="col">B_full_address</th>      <th scope="col">A_lng</th>      <th scope="col">A_lat</th>      <th scope="col">B_lng</th>      <th scope="col">B_lat</th>      <th scope="col">distance_in_miles</th>    </tr>  </thead>  <tbody>    <tr>      <th scope="row">0</th>      <td>Times Square</td>      <td>Manhattan</td>      <td>NY</td>      <td>Walt Disney World Resort</td>      <td>Orlando</td>      <td>FL</td>      <td>Times Square, Manhattan NY</td>      <td>Walt Disney World Resort, Orlando FL</td>      <td>-73.966248</td>      <td>40.783436</td>      <td>-81.582626</td>      <td>28.403811</td>      <td>957.21</td>    </tr>  </tbody></table>
+                      
+                   <br><br><br>
+
+
+                    <!-- content end -->
+                    </main>
+        </div>
+    </div>
+
+
+
+</body>
+</html>
